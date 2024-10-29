@@ -1,7 +1,8 @@
 const std = @import("std");
 
-/// Static Allocations
+/// Static Allocation
 const looking_for: []const u8 = "zig-out";
+/// Static Allocation
 const known_ignore = &[_][]const u8{
     "node_modules",
     "target",
@@ -9,34 +10,6 @@ const known_ignore = &[_][]const u8{
 };
 const stdout = std.io.getStdOut();
 const writer = stdout.writer();
-
-const Store = struct {
-    lock: std.Thread.RwLock = .{},
-    data: std.ArrayList([]const u8),
-
-    pub fn init(allocator: *std.mem.Allocator) !Store {
-        return Store{
-            .data = std.ArrayList([]const u8).init(allocator),
-        };
-    }
-
-    pub fn deinit(self: Store) void {
-        self.data.deinit();
-    }
-
-    pub fn append(self: Store, value: []const u8) !void {
-        self.lock.lock();
-        try self.data.append(value);
-        self.lock.unlock();
-    }
-
-    pub fn readDataSafe(self: Store) !std.ArrayList([]const u8) {
-        self.lock.lockShared();
-        const data = self.data;
-        self.lock.unlock();
-        return data;
-    }
-};
 
 fn walk(gpa: std.mem.Allocator, paths: *std.ArrayList([]const u8), start: std.fs.Dir, previous: []const u8) !void {
     var it = start.iterate();
@@ -92,6 +65,10 @@ pub fn main() !void {
         cwd,
         ".",
     });
+
+    // Do other shenanigans here?
+    //
+    // End shenanigans
 
     thread.join();
 
