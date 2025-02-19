@@ -2,6 +2,8 @@ const std = @import("std");
 
 /// Static Allocation
 const looking_for: []const u8 = "zig-out";
+const looking_for_cache: []const u8 = ".zig-cache";
+
 /// Static Allocation
 const known_ignore = &[_][]const u8{
     "node_modules",
@@ -39,8 +41,15 @@ fn walk(gpa: std.mem.Allocator, paths: *std.ArrayList([]const u8), start: std.fs
             }
         }
 
+        if (entry.name.len >= looking_for_cache.len) {
+            const end_slice = entry.name[entry.name.len - looking_for_cache.len ..];
+            if (std.mem.eql(u8, looking_for_cache, end_slice)) {
+                try paths.append(bytes);
+            }
+        }
+
         // Ingores dotfiles / dotfolders
-        if (entry.kind == .directory and !std.mem.eql(u8, entry.name, looking_for) and entry.name[0] != '.') {
+        if (entry.kind == .directory and !std.mem.eql(u8, entry.name, looking_for) and !std.mem.eql(u8, entry.name, looking_for_cache) and entry.name[0] != '.') {
             var sub_dir = try start.openDir(entry.name, .{ .iterate = true, .no_follow = true, .access_sub_paths = false });
             defer sub_dir.close();
             try walk(gpa, paths, sub_dir, bytes);
